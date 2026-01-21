@@ -15,10 +15,16 @@ Aplicação em camadas (SRP) construída com Node.js, TypeScript e Express, com 
 ## Visão Geral
 - CRUD de Categorias, Ingredientes e Receitas.
 - Busca e filtragem de receitas por `categoryId` e por texto (`search`).
+- Estados das receitas: draft (rascunho), published (publicada), archived (arquivada).
+- Escalonamento inteligente de porções de receitas.
+- Geração de lista de compras consolidada.
 - Regras de negócio:
   - Unicidade de nome para Categoria e Ingrediente.
   - Receita deve referenciar uma Categoria existente.
   - Bloqueio de exclusão de Categoria quando houver Receitas relacionadas.
+  - Apenas receitas published aparecem nas listagens públicas.
+  - Receitas published não podem ser excluídas, apenas arquivadas.
+  - Receitas archived não podem ser editadas.
 
 ## Arquitetura Simplificada (2 Camadas)
 - `core`: Contém toda a lógica de negócio, modelos de dados, interfaces e acesso aos dados (armazenamento em memória).
@@ -90,11 +96,15 @@ Ingredientes
 - `DELETE /ingredients/:id` — remove
 
 Receitas
-- `GET /recipes?categoryId=&search=` — lista com filtros
+- `GET /recipes?categoryId=&search=` — lista com filtros (apenas published)
 - `GET /recipes/:id` — detalhe
-- `POST /recipes` — cria `{ title, description?, ingredients: [{ name, quantity, unit }], steps[], categoryId }`
-- `PUT /recipes/:id` — atualiza parcial dos mesmos campos
-- `DELETE /recipes/:id` — remove
+- `POST /recipes` — cria `{ title, description?, ingredients: [{ name, quantity, unit }], steps[], categoryId }` (estado draft)
+- `PUT /recipes/:id` — atualiza parcial dos mesmos campos (apenas se não archived)
+- `DELETE /recipes/:id` — remove (ou arquiva se published)
+- `PUT /recipes/:id/publish` — publica receita
+- `PUT /recipes/:id/archive` — arquiva receita
+- `POST /recipes/:id/scale` — escalona receita `{ portions }`
+- `POST /recipes/shopping-list` — gera lista de compras `{ recipeIds }`
 
 Códigos de erro: as validações retornam `400` com `{ error: "mensagem" }` (middleware em `src/presentation/http/middlewares/errorHandler.ts`).
 

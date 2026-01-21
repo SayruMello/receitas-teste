@@ -73,6 +73,48 @@ export function recipesRoutes(service: IRecipeService) {
     }
   })
 
+  // Endpoint para publicar uma receita (muda para published)
+  router.put("/:id/publish", async (req, res, next) => {
+    try {
+      const item = await service.publish(req.params.id)
+      res.json(item)
+    } catch (error) {
+      next(error)
+    }
+  })
+
+  // Endpoint para arquivar uma receita (muda para archived)
+  router.put("/:id/archive", async (req, res, next) => {
+    try {
+      const item = await service.archive(req.params.id)
+      res.json(item)
+    } catch (error) {
+      next(error)
+    }
+  })
+
+  // Endpoint para escalonar porções de uma receita
+  router.post("/:id/scale", async (req, res, next) => {
+    try {
+      const portions = Number(req.body.portions)
+      const item = await service.scaleRecipe(req.params.id, portions)
+      res.json(item)
+    } catch (error) {
+      next(error)
+    }
+  })
+
+  // Endpoint para gerar lista de compras consolidada
+  router.post("/shopping-list", async (req, res, next) => {
+    try {
+      const recipeIds = Array.isArray(req.body.recipeIds) ? req.body.recipeIds.map(String) : []
+      const list = await service.generateShoppingList(recipeIds)
+      res.json(list)
+    } catch (error) {
+      next(error)
+    }
+  })
+
   return router
 }
 

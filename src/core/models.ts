@@ -18,9 +18,11 @@ export type Recipe = {
   steps: string[]
   servings: number
   categoryId: string
+  state: 'draft' | 'published' | 'archived' // Estado da receita: rascunho, publicada ou arquivada
   createdAt: Date
 }
 
+// Adicionamos o campo 'state' para controlar o workflow da receita (draft, published, archived)
 export type CreateRecipeInput = {
   title: string
   description?: string

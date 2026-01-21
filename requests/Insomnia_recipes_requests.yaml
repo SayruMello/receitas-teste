@@ -234,7 +234,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: "{{baseUrl}}/recipes/3dff9a9f-2c10-4567-b51a-4dbe42c9d04f"
+  - url: "{{baseUrl}}/recipes/rec-1"
     name: Update Recipe
     meta:
       id: req_91287751413841f7ab2e7650ca5af7a6
@@ -407,7 +407,7 @@ collection:
         send: true
         store: true
       rebuildPath: true
-  - url: "{{baseUrl}}/recipes/547e7294-3614-4acb-a881-dabe98fef8e6"
+  - url: "{{baseUrl}}/recipes/rec-1"
     name: Delete Recipe
     meta:
       id: req_a3d62395de044f499c15fecfd4925cde
@@ -446,7 +446,7 @@ collection:
         {
           "title": "Espaguete à Bolonhesa",
           "description": "Um clássico italiano prático e delicioso",
-          "categoryId": "734b712c-9560-4d61-b2aa-3163c792484a",
+          "categoryId": "cat-1",
           "ingredients": [
             {
               "name": "Espaguete",
@@ -483,6 +483,108 @@ collection:
           ],
           "servings": 4
         }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/12.1.0
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{baseUrl}}/recipes/rec-1/publish"
+    name: Publish Recipe
+    meta:
+      id: req_publish_recipe
+      created: 1765982500269
+      modified: 1765984168605
+      isPrivate: false
+      description: ""
+      sortKey: -1758693473689.3125
+    method: PUT
+    headers:
+      - name: User-Agent
+        value: insomnia/12.1.0
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{baseUrl}}/recipes/rec-1/archive"
+    name: Archive Recipe
+    meta:
+      id: req_archive_recipe
+      created: 1765982500269
+      modified: 1765984168605
+      isPrivate: false
+      description: ""
+      sortKey: -1758693473689.3125
+    method: PUT
+    headers:
+      - name: User-Agent
+        value: insomnia/12.1.0
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{baseUrl}}/recipes/rec-1/scale"
+    name: Scale Recipe
+    meta:
+      id: req_scale_recipe
+      created: 1765982500269
+      modified: 1765984168605
+      isPrivate: false
+      description: ""
+      sortKey: -1758693473689.3125
+    method: POST
+    body:
+      mimeType: application/json
+      text: '{ "portions": 8 }'
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: User-Agent
+        value: insomnia/12.1.0
+        description: ""
+        disabled: false
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{baseUrl}}/recipes/shopping-list"
+    name: Generate Shopping List
+    meta:
+      id: req_shopping_list
+      created: 1765982500269
+      modified: 1765984168605
+      isPrivate: false
+      description: ""
+      sortKey: -1758693473689.3125
+    method: POST
+    body:
+      mimeType: application/json
+      text: '{ "recipeIds": ["rec-1"] }'
     headers:
       - name: Content-Type
         value: application/json
