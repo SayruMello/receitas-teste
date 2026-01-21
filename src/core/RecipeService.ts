@@ -9,6 +9,7 @@ export class RecipeService implements IRecipeService {
   private categoryService = new CategoryService()
   private ingredientService = new IngredientService()
 
+  // Listagem de receitas: agora só retorna receitas publicadas
   async list(filter?: { categoryId?: string; categoryName?: string; search?: string }): Promise<Recipe[]> {
     let categoryId = filter?.categoryId
 
@@ -21,7 +22,7 @@ export class RecipeService implements IRecipeService {
       }
     }
 
-    let items = [...store.recipes]
+    let items = [...store.recipes].filter(r => r.state === 'published') // Apenas receitas publicadas
     
     if (categoryId) {
       items = items.filter(r => r.categoryId === categoryId)
@@ -50,6 +51,7 @@ export class RecipeService implements IRecipeService {
     return found
   }
 
+  // Criação de receita: sempre inicia como draft
   async create(input: CreateRecipeInput): Promise<Recipe> {
     const title = input.title.trim()
     if (!title) throw new Error("Title is required")
@@ -95,16 +97,20 @@ export class RecipeService implements IRecipeService {
       steps,
       servings,
       categoryId: input.categoryId,
+      state: 'draft', // Estado inicial
       createdAt: new Date(),
     }
     store.recipes.push(recipe)
     return recipe
   }
 
+  // Atualização: só permite editar se não estiver arquivada
   async update(id: string, data: Partial<CreateRecipeInput>): Promise<Recipe> {
     const idx = store.recipes.findIndex(r => r.id === id)
     if (idx < 0) throw new Error("Recipe not found")
     const current = store.recipes[idx]
+
+    if (current.state === 'archived') throw new Error("Cannot edit archived recipe") // Regra de negócio
 
     const updated = { ...current }
 
@@ -162,10 +168,82 @@ export class RecipeService implements IRecipeService {
     return updated
   }
 
+  // Exclusão: published não pode ser removida, apenas arquivada
   async delete(id: string): Promise<void> {
     const idx = store.recipes.findIndex(r => r.id === id)
-    if (idx >= 0) {
+    if (idx < 0) throw new Error("Recipe not found")
+    const recipe = store.recipes[idx]
+    if (recipe.state === 'published') {
+      recipe.state = 'archived' // Arquiva ao invés de excluir
+    } else {
       store.recipes.splice(idx, 1)
     }
+  }
+
+  // Publicar receita: muda o estado para published
+  async publish(id: string): Promise<Recipe> {
+    const idx = store.recipes.findIndex(r => r.id === id)
+    if (idx < 0) throw new Error("Recipe not found")
+    const recipe = store.recipes[idx]
+    recipe.state = 'published'
+    return recipe
+  }
+
+  // Arquivar receita: muda o estado para archived
+  async archive(id: string): Promise<Recipe> {
+    const idx = store.recipes.findIndex(r => r.id === id)
+    if (idx < 0) throw new Error("Recipe not found")
+    const recipe = store.recipes[idx]
+    recipe.state = 'archived'
+    return recipe
+  }
+
+  // Escalonamento de porções: retorna uma nova versão da receita com ingredientes proporcionais
+  async scaleRecipe(id: string, portions: number): Promise<Recipe> {
+    if (!(portions > 0)) throw new Error("Portions must be greater than 0") // Validação
+    const recipe = await this.get(id)
+    const factor = portions / recipe.servings
+    const scaledIngredients = recipe.ingredients.map(ing => ({
+      ...ing,
+      quantity: ing.quantity * factor
+    }))
+    return {
+      ...recipe,
+      servings: portions,
+      ingredients: scaledIngredients
+    }
+  }
+
+  // Geração de lista de compras consolidada
+  async generateShoppingList(recipeIds: string[]): Promise<{ name: string; quantity: number; unit: string }[]> {
+    // Busca receitas pelos IDs e soma ingredientes iguais (mesmo nome e unidade)
+    const recipes = []
+    for (const id of recipeIds) {
+      try {
+        recipes.push(await this.get(id))
+      } catch {
+        throw new Error(`Recipe with id ${id} not found`)
+      }
+    }
+    const allIngredients = await this.ingredientService.list()
+    const nameById = new Map(allIngredients.map(ing => [ing.id, ing.name]))
+    const consolidated = new Map<string, { quantity: number; unit: string }>()
+    for (const recipe of recipes) {
+      for (const ing of recipe.ingredients) {
+        const name = nameById.get(ing.ingredientId)
+        if (!name) continue
+        const key = `${name}|${ing.unit}`
+        const existing = consolidated.get(key)
+        if (existing) {
+          existing.quantity += ing.quantity
+        } else {
+          consolidated.set(key, { quantity: ing.quantity, unit: ing.unit })
+        }
+      }
+    }
+    return Array.from(consolidated.entries()).map(([key, value]) => {
+      const [name] = key.split('|')
+      return { name, quantity: value.quantity, unit: value.unit }
+    })
   }
 }
